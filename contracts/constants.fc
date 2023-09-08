@@ -1,0 +1,3 @@
+const int op::claim = 0x4d0c099d;
+const int const::jetton_transfer_fee = 20000000;
+const int error::wrong_sender = 701;

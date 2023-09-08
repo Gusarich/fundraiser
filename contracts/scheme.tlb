@@ -1,0 +1,4 @@
+_ admin:MsgAddressInt goal:Coins current:(HashmapE 267 Coins) block_time:uint64 priority_coin:MsgAddress
+  metadata_ipfs_link:^Cell fee_receiver:MsgAddressInt fee_percentage:uint16 = Storage;
+
+claim#4d0c099d query_id:uint64 = InternalMsgBody;
