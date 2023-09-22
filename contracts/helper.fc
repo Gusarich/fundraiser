@@ -54,6 +54,10 @@ global slice context::sender;
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::user));
 
         send_raw_message(begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(data::fundraiser)
+            .store_coins(0)
+            .store_uint(0, 107)
             .store_uint(op::return_request, 32)
             .store_uint(context::query_id, 64)
             .store_slice(data::user)
