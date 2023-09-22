@@ -121,7 +121,24 @@ global slice context::sender;
 
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::helper_code));
 
-        ;; TODO
+        (slice key, slice val, int flag) = tokens~dict::delete_get_min(267);
+        while (flag) {
+            int amount = val~load_coins();
+            
+            send_raw_message(begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice(key)
+                .store_coins(const::jetton_transfer_fee)
+                .store_uint(0, 107)
+                .store_uint(op::transfer, 32)
+                .store_uint(context::query_id, 64)
+                .store_coins(amount)
+                .store_slice(user)
+                .store_uint(0, 6)
+            .end_cell(), 1);
+
+            (key, val, flag) = tokens~dict::delete_get_min(267);
+        }
     }
 
     elseif (context::op == op::transfer_notification) {
