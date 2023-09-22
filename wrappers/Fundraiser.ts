@@ -1,9 +1,39 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from 'ton-core';
+import {
+    Address,
+    beginCell,
+    Cell,
+    Contract,
+    contractAddress,
+    ContractProvider,
+    Dictionary,
+    Sender,
+    SendMode,
+} from '@ton/core';
 
-export type FundraiserConfig = {};
+export type FundraiserConfig = {
+    admin: Address;
+    goal: bigint;
+    current?: Dictionary<Address, bigint>;
+    blockTime: bigint;
+    priorityCoin: Address;
+    metadataIpfsLink: Cell;
+    feeReceiver: Address;
+    feePercentage: number;
+    helperCode: Cell;
+};
 
 export function fundraiserConfigToCell(config: FundraiserConfig): Cell {
-    return beginCell().endCell();
+    return beginCell()
+        .storeAddress(config.admin)
+        .storeCoins(config.goal)
+        .storeDict(config.current)
+        .storeUint(config.blockTime, 64)
+        .storeAddress(config.priorityCoin)
+        .storeRef(config.metadataIpfsLink)
+        .storeAddress(config.feeReceiver)
+        .storeUint(config.feePercentage, 16)
+        .storeRef(config.helperCode)
+        .endCell();
 }
 
 export class Fundraiser implements Contract {
@@ -24,6 +54,13 @@ export class Fundraiser implements Contract {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell().endCell(),
+        });
+    }
+
+    async sendClaim(provider: ContractProvider, via: Sender, value: bigint, queryId: bigint) {
+        await provider.internal(via, {
+            value,
+            body: beginCell().storeUint(0x4d0c099d, 32).storeUint(queryId, 64).endCell(),
         });
     }
 }
