@@ -94,6 +94,36 @@ global slice context::sender;
         }
     }
 
+    elseif (context::op == op::return_request) {
+        throw_unless(error::not_finished, now() > data::block_time);
+        (slice priority_balance, int f?) = data::current.dict_get?(267, data::priority_coin);
+        throw_if(error::not_blocked, f? & (priority_balance~load_coins() >= data::goal));
+
+        slice user = in_msg_body~load_msg_addr();
+        cell tokens = in_msg_body~load_dict();
+
+        cell helper_stateinit = begin_cell()
+            .store_uint(0, 2)
+            .store_dict(data::helper_code)
+            .store_dict(begin_cell()
+                .store_slice(my_address())
+                .store_slice(user)
+                .store_uint(0, 1)
+            .end_cell())
+            .store_uint(0, 1)
+        .end_cell();
+
+        slice helper_address = begin_cell()
+            .store_uint(4, 3)
+            .store_int(0, 8)
+            .store_uint(cell_hash(helper_stateinit), 256)
+        .end_cell().begin_parse();
+
+        throw_unless(error::wrong_sender, equal_slices(context::sender, data::helper_code));
+
+        ;; TODO
+    }
+
     elseif (context::op == op::transfer_notification) {
         int amount = in_msg_body~load_coins();
         slice sender = in_msg_body~load_msg_addr();
