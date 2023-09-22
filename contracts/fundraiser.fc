@@ -119,7 +119,7 @@ global slice context::sender;
             .store_uint(cell_hash(helper_stateinit), 256)
         .end_cell().begin_parse();
 
-        throw_unless(error::wrong_sender, equal_slices(context::sender, data::helper_code));
+        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address));
 
         (slice key, slice val, int flag) = tokens~dict::delete_get_min(267);
         while (flag) {
