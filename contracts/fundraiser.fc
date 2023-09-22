@@ -57,6 +57,10 @@ global slice context::sender;
 
     if (context::op == op::claim) {
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::admin));
+        throw_unless(error::not_finished, now() > data::block_time);
+        (slice priority_balance, int f?) = data::current.dict_get?(267, data::priority_coin);
+        throw_unless(error::blocked, f? & (priority_balance~load_coins() >= data::goal));
+        
         (slice key, slice val, int flag) = data::current~dict::delete_get_min(267);
         while (flag) {
             int amount = val~load_coins();
