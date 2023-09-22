@@ -682,23 +682,6 @@
   resolved "https://registry.yarnpkg.com/@tact-lang/opcode/-/opcode-0.0.13.tgz#a168df5269809be7903f663fc216f0b9486a291a"
   integrity sha512-4FGp1p3ahVrXr2QbyD2FqmnvXTMYapTlRJSPhj4O1L2yIq7dp0CkFL9EdKOCUfyirT0X5en78PHLfj0CuQGD7A==
 
-"@ton-community/blueprint@^0.12.0":
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/@ton-community/blueprint/-/blueprint-0.12.0.tgz#0e77111a9fe41138c8d7f8d3993016259fae58e9"
-  integrity sha512-QytcjOQCKtmaseEuEeuBGiKuQ649nwXGw4U3aGw7zz/SOd3SidMoTKAK3KE2VL84L8WRlw9HZx6wumJUkWPF7Q==
-  dependencies:
-    "@orbs-network/ton-access" "^2.3.3"
-    "@tact-lang/compiler" "^1.1.3"
-    "@ton-community/func-js" "^0.6.2"
-    "@tonconnect/sdk" "^2.1.3"
-    arg "^5.0.2"
-    chalk "^4.1.0"
-    dotenv "^16.1.4"
-    inquirer "^8.2.5"
-    qrcode-terminal "^0.12.0"
-    ton-x "^2.1.0"
-    ts-node "^10.9.1"
-
 "@ton-community/func-js-bin@0.4.4":
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/@ton-community/func-js-bin/-/func-js-bin-0.4.4.tgz#b7b1b5b5e0939286cf2ccb0b8ff6c1db5774e623"
@@ -712,17 +695,68 @@
     "@ton-community/func-js-bin" "0.4.4"
     arg "^5.0.2"
 
-"@ton-community/sandbox@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@ton-community/sandbox/-/sandbox-0.11.0.tgz#411eae67c8f7aca07b6ae8e53233f6c3c21fcbe1"
-  integrity sha512-3tlSprRBTSu9m0tJTC3cl4MXQep1vfNMPqk9+JAXSRJu9ToEvIUVpqO6MQNkbz9LkKDuOEBs5vyqT37DlKKcWw==
+"@ton/blueprint@^0.12.1":
+  version "0.12.1"
+  resolved "https://registry.yarnpkg.com/@ton/blueprint/-/blueprint-0.12.1.tgz#a6721989b426c3427f0f8e353200cbf3e10030c7"
+  integrity sha512-CZfg5RR0OmuMLkQc16RO0Z+ewUJVlK1J0ocdKSdo9VvKBJI00rRJ3q7r71PCVBbumvoZEytV7kaXktj10ZItfQ==
+  dependencies:
+    "@orbs-network/ton-access" "^2.3.3"
+    "@tact-lang/compiler" "^1.1.3"
+    "@ton-community/func-js" "^0.6.2"
+    "@tonconnect/sdk" "^2.1.3"
+    arg "^5.0.2"
+    chalk "^4.1.0"
+    dotenv "^16.1.4"
+    inquirer "^8.2.5"
+    qrcode-terminal "^0.12.0"
+    ton-x "^2.1.0"
+    ts-node "^10.9.1"
 
-"@ton-community/test-utils@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@ton-community/test-utils/-/test-utils-0.3.0.tgz#44e854cd023123d3cb57df3839730b0bc6dac609"
-  integrity sha512-eCw1c6a0TcKwiYEA4fmzPq+7dJtUx0UFYu+UEoRznIxEOcpEb8Ssjb9yMeiJEzbtUVMCkhEtpztdKt75ngDRWg==
+"@ton/core@^0.52.2":
+  version "0.52.2"
+  resolved "https://registry.yarnpkg.com/@ton/core/-/core-0.52.2.tgz#bec763fda9164ac831fdaa45cf86135d8394d5ef"
+  integrity sha512-h7ILb3XIrZ+tZ4sqTBORna3HVaVnSjhc6gGQY11yKeDBRrhIXO7wdlpk7IICwpUndbWB9YzgmXXLDvtpoIixTg==
+  dependencies:
+    symbol.inspect "1.0.1"
+
+"@ton/crypto-primitives@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ton/crypto-primitives/-/crypto-primitives-2.0.0.tgz#446256146d64fcec6e3f21d9f40b5148640329cc"
+  integrity sha512-wttiNClmGbI6Dfy/8oyNnsIV0b/qYkCJz4Gn4eP62lJZzMtVQ94Ko7nikDX1EfYHkLI1xpOitWpW+8ZuG6XtDg==
+  dependencies:
+    jssha "3.2.0"
+
+"@ton/crypto@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@ton/crypto/-/crypto-3.2.0.tgz#8fcb36cc93eafd05249c847d1f4ad39cf2565e46"
+  integrity sha512-50RkwReEuV2FkxSZ8ht/x9+n0ZGtwRKGsJ0ay4I/HFhkYVG/awIIBQeH0W4j8d5lADdO5h01UtX8PJ8AjiejjA==
+  dependencies:
+    "@ton/crypto-primitives" "2.0.0"
+    jssha "3.2.0"
+    tweetnacl "1.0.3"
+
+"@ton/sandbox@^0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@ton/sandbox/-/sandbox-0.11.1.tgz#cd1fed88e8c857e3634251f9530fae69e9291afe"
+  integrity sha512-yoGpU8lgmHC/YuiPhKmp5inTSHzZtZXgvSNUCn4kC2L9VQFSN+ij+G73sgO9JwcGPtIx/hyy7I0J+IM/mbRTnA==
+
+"@ton/test-utils@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@ton/test-utils/-/test-utils-0.3.1.tgz#59aec280a6b34a9e258e9f1bb15994804839aee7"
+  integrity sha512-fMEioJhOmHtKIlYdCqD5TwU6WAAkyKZ+rL8JVpuwAz+OHhJx+RntCkD+sd6MH5f2KGIpz/7d2Uabt0O/liyHGQ==
   dependencies:
     node-inspect-extracted "^2.0.0"
+
+"@ton/ton@^13.7.0":
+  version "13.7.0"
+  resolved "https://registry.yarnpkg.com/@ton/ton/-/ton-13.7.0.tgz#ec2876e2c66eab7f68855d91b8573cca16b04beb"
+  integrity sha512-7ejZTmMwWTQH5hW/jVSnh6SFwsdl2Ul9dxpKchVLB6nYsSzPkAq9bV9zav9zMFyWTS1+vkVzjAwyeXeKUx1Y0Q==
+  dependencies:
+    axios "^0.25.0"
+    dataloader "^2.0.0"
+    symbol.inspect "1.0.1"
+    teslabot "^1.3.0"
+    zod "^3.21.4"
 
 "@tonconnect/isomorphic-eventsource@^0.0.1":
   version "0.0.1"
@@ -809,9 +843,9 @@
     "@babel/types" "^7.20.7"
 
 "@types/bn.js@^5.1.0":
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-5.1.1.tgz#b51e1b55920a4ca26e9285ff79936bbdec910682"
-  integrity sha512-qNrYbZqMx0uJAfKnKclPh+dTwK33KfLHYqtyODwd5HnXOjnkhc4qgn3BrK6RWyGZm5+sIFE7Q7Vz6QQtJB7w7g==
+  version "5.1.2"
+  resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-5.1.2.tgz#162f5238c46f4bcbac07a98561724eca1fcf0c5e"
+  integrity sha512-dkpZu0szUtn9UXTmw+e0AJFd4D2XAxDnsCLdc05SfqpqzPEBft8eQr8uaFitfo/dUUOZERaLec2hHMG87A4Dxg==
   dependencies:
     "@types/node" "*"
 
@@ -854,10 +888,15 @@
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.2.tgz#b74129719fc8d11c01868010082d483b7545591a"
   integrity sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==
 
-"@types/node@*", "@types/node@>=13.7.0", "@types/node@^20.2.5":
+"@types/node@*", "@types/node@^20.2.5":
   version "20.5.9"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.5.9.tgz#a70ec9d8fa0180a314c3ede0e20ea56ff71aed9a"
   integrity sha512-PcGNd//40kHAS3sTlzKB9C9XL4K0sTup8nbG5lC14kzEteTNuAFh9u5nA0o5TWnSG2r/JNPRXFVcHJIIeRlmqQ==
+
+"@types/node@>=13.7.0":
+  version "20.6.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.6.3.tgz#5b763b321cd3b80f6b8dde7a37e1a77ff9358dd9"
+  integrity sha512-HksnYH4Ljr4VQgEy2lTStbCKv/P590tmPe5HqOnv9Gprffgv5WXAY+Y5Gqniu0GGqeTCUdBnzC3QSrzPkBkAMA==
 
 "@types/stack-utils@^2.0.0":
   version "2.0.1"
@@ -1247,9 +1286,9 @@ cli-cursor@^3.1.0:
     restore-cursor "^3.1.0"
 
 cli-spinners@^2.5.0:
-  version "2.9.0"
-  resolved "https://registry.yarnpkg.com/cli-spinners/-/cli-spinners-2.9.0.tgz#5881d0ad96381e117bbe07ad91f2008fe6ffd8db"
-  integrity sha512-4/aL9X3Wh0yiMQlE+eeRhWP6vclO3QRtw1JHKIT0FFUs5FjpFmESqtMvYZ0+lbzBw900b95mS0hohy+qn2VK/g==
+  version "2.9.1"
+  resolved "https://registry.yarnpkg.com/cli-spinners/-/cli-spinners-2.9.1.tgz#9c0b9dad69a6d47cbb4333c14319b060ed395a35"
+  integrity sha512-jHgecW0pxkonBJdrKsqxgRX9AcG+u/5k0Q7WPDfi8AogLAdwxEkyYYNWwZ5GvVFoFx2uiY1eNcSK00fh+1+FyQ==
 
 cli-width@^3.0.0:
   version "3.0.0"
@@ -1545,10 +1584,15 @@ find-up@^4.0.0, find-up@^4.1.0:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
 
-follow-redirects@^1.14.7, follow-redirects@^1.14.9:
+follow-redirects@^1.14.7:
   version "1.15.2"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.2.tgz#b460864144ba63f2681096f274c4e57026da2c13"
   integrity sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==
+
+follow-redirects@^1.14.9:
+  version "1.15.3"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.3.tgz#fe2f3ef2690afce7e82ed0b44db08165b207123a"
+  integrity sha512-1VzOtuEM8pC9SFU1E+8KfTjZyMztRsgEfwQl44z8A25uy13jSzTj6dyK2Df52iV0vgHCfBwLhDWevLn95w5v6Q==
 
 form-data@^4.0.0:
   version "4.0.0"
@@ -3088,13 +3132,6 @@ ton-core@>=0.49.0:
   dependencies:
     symbol.inspect "1.0.1"
 
-ton-core@^0.51.0:
-  version "0.51.0"
-  resolved "https://registry.yarnpkg.com/ton-core/-/ton-core-0.51.0.tgz#ddc2a240fca0afa9ab9fc3ad035844715cd6a4f4"
-  integrity sha512-FgejId/X1o7nNc5g8DBW1+9piwFolVU3e83Z8TudDCALik29YPhGOqLHSvcVYux3QV7SL0qCNaKgA3mV2nNfCA==
-  dependencies:
-    symbol.inspect "1.0.1"
-
 ton-crypto-primitives@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ton-crypto-primitives/-/ton-crypto-primitives-2.0.0.tgz#e85cd68c0d523f6bdf3f306201a76e51b7e9312e"
@@ -3150,17 +3187,6 @@ ton@9.8.0:
     teslabot "^1.3.0"
     ton-crypto "2.1.0"
     tweetnacl "1.0.3"
-
-ton@~13.6.0:
-  version "13.6.1"
-  resolved "https://registry.yarnpkg.com/ton/-/ton-13.6.1.tgz#72b8b4da460f67209a1a7594452b28d027abd531"
-  integrity sha512-CZlFsmO+l+uPSI2zgnUd8zCS5XuWnUSFRVUjRGl5X5fKXYnjaVba4vMaIyFTJwel+uEMnolGMSlNP8DAa9mfVg==
-  dependencies:
-    axios "^0.25.0"
-    dataloader "^2.0.0"
-    symbol.inspect "1.0.1"
-    teslabot "^1.3.0"
-    zod "^3.21.4"
 
 tr46@~0.0.3:
   version "0.0.3"
@@ -3298,9 +3324,9 @@ webidl-conversions@^3.0.0:
   integrity sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==
 
 whatwg-fetch@^3.4.1:
-  version "3.6.18"
-  resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-3.6.18.tgz#2f640cdee315abced7daeaed2309abd1e44e62d4"
-  integrity sha512-ltN7j66EneWn5TFDO4L9inYC1D+Czsxlrw2SalgjMmEMkLfA5SIZxEFdE6QtHFiiM6Q7WL32c7AkI3w6yxM84Q==
+  version "3.6.19"
+  resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-3.6.19.tgz#caefd92ae630b91c07345537e67f8354db470973"
+  integrity sha512-d67JP4dHSbm2TrpFj8AbO8DnL1JXL5J9u0Kq2xW6d0TFDbCA3Muhdt8orXC22utleTVj7Prqt82baN6RBvnEgw==
 
 whatwg-url@^5.0.0:
   version "5.0.0"
