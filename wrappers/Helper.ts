@@ -48,4 +48,11 @@ export class Helper implements Contract {
             body: beginCell().storeUint(0xee54921, 32).storeUint(queryId, 64).endCell(),
         });
     }
+
+    async getTotal(provider: ContractProvider): Promise<Dictionary<Address, bigint>> {
+        return (await provider.get('get_total', [])).stack
+            .readCell()
+            .beginParse()
+            .loadDictDirect(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(16));
+    }
 }

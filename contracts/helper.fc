@@ -73,3 +73,8 @@ global slice context::sender;
 
     save_data();
 }
+
+cell get_total() method_id {
+    load_data();
+    return data::current;
+}

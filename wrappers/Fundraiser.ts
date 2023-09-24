@@ -65,7 +65,26 @@ export class Fundraiser implements Contract {
         });
     }
 
-    async getHelperAddress(provider: ContractProvider, user: Address) {
+    async getActive(provider: ContractProvider): Promise<boolean> {
+        return Boolean((await provider.get('get_active', [])).stack.readNumber());
+    }
+
+    async getType(provider: ContractProvider): Promise<number> {
+        return (await provider.get('get_type', [])).stack.readNumber();
+    }
+
+    async getBlockTime(provider: ContractProvider): Promise<number> {
+        return (await provider.get('get_block_time', [])).stack.readNumber();
+    }
+
+    async getTotal(provider: ContractProvider): Promise<Dictionary<Address, bigint>> {
+        return (await provider.get('get_total', [])).stack
+            .readCell()
+            .beginParse()
+            .loadDictDirect(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(16));
+    }
+
+    async getHelperAddress(provider: ContractProvider, user: Address): Promise<Address> {
         return (
             await provider.get('get_helper_address', [
                 { type: 'slice', cell: beginCell().storeAddress(user).endCell() },

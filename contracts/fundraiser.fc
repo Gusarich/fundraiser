@@ -205,6 +205,21 @@ int get_active() method_id {
     return (data::block_time == 0) | (now() <= data::block_time);
 }
 
+int get_type() method_id {
+    load_data();
+    return data::block_time == 0;
+}
+
+int get_block_time() method_id {
+    load_data();
+    return data::block_time;
+}
+
+cell get_total() method_id {
+    load_data();
+    return data::current;
+}
+
 slice get_helper_address(slice user) method_id {
     load_data();
 
