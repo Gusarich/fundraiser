@@ -50,7 +50,7 @@ export class Fundraiser implements Contract {
         return new Fundraiser(contractAddress(workchain, init), init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint, queryId: bigint, priorityCoin: Address) {
+    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint, queryId: bigint, priorityCoin?: Address) {
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
