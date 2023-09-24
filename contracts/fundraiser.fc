@@ -9,6 +9,7 @@ global slice data::priority_coin;
 global cell data::metadata_ipfs_link;
 global slice data::fee_receiver;
 global int data::fee_percentage;
+global int data::deployed;
 global cell data::helper_code;
 
 global int context::op;
@@ -25,6 +26,7 @@ global slice context::sender;
     data::metadata_ipfs_link = ds~load_ref();
     data::fee_receiver = ds~load_msg_addr();
     data::fee_percentage = ds~load_uint(16);
+    data::deployed = ds~load_int(1);
     data::helper_code = ds~load_ref();
 }
 
@@ -38,6 +40,7 @@ global slice context::sender;
         .store_ref(data::metadata_ipfs_link)
         .store_slice(data::fee_receiver)
         .store_uint(data::fee_percentage, 16)
+        .store_int(data::deployed, 1)
         .store_ref(data::helper_code)
     .end_cell());
 }
@@ -51,11 +54,18 @@ global slice context::sender;
 
     context::op = in_msg_body~load_uint(32);
     context::query_id = in_msg_body~load_uint(64);
-    (_, context::sender) = in_msg_full.begin_parse().load_msg_addr();
+    (_, context::sender) = in_msg_full.begin_parse().skip_bits(4).load_msg_addr();
 
     load_data();
 
-    if (context::op == op::claim) {
+    if (context::op == op::deploy) {
+        throw_unless(error::wrong_sender, equal_slices(context::sender, data::admin));
+        throw_if(error::already_deployed, data::deployed);
+        data::priority_coin = in_msg_body~load_msg_addr();
+        data::deployed = -1;
+    }
+
+    elseif (context::op == op::claim) {
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::admin));
         throw_unless(error::not_finished, now() > data::block_time);
         (slice priority_balance, int f?) = data::current.dict_get?(267, data::priority_coin);
@@ -188,4 +198,9 @@ global slice context::sender;
     }
 
     save_data();
+}
+
+int get_active() method_id {
+    load_data();
+    return now() <= data::block_time;
 }

@@ -15,8 +15,8 @@ export type FundraiserConfig = {
     goal: bigint;
     current?: Dictionary<Address, bigint>;
     blockTime: bigint;
-    priorityCoin: Address;
-    metadataIpfsLink: Cell;
+    priorityCoin?: Address;
+    metadataIpfsLink: string;
     feeReceiver: Address;
     feePercentage: number;
     helperCode: Cell;
@@ -29,9 +29,10 @@ export function fundraiserConfigToCell(config: FundraiserConfig): Cell {
         .storeDict(config.current)
         .storeUint(config.blockTime, 64)
         .storeAddress(config.priorityCoin)
-        .storeRef(config.metadataIpfsLink)
+        .storeRef(beginCell().storeStringTail(config.metadataIpfsLink).endCell())
         .storeAddress(config.feeReceiver)
         .storeUint(config.feePercentage, 16)
+        .storeUint(0, 1)
         .storeRef(config.helperCode)
         .endCell();
 }
@@ -49,11 +50,11 @@ export class Fundraiser implements Contract {
         return new Fundraiser(contractAddress(workchain, init), init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint, queryId: bigint, priorityCoin: Address) {
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().endCell(),
+            body: beginCell().storeUint(0x2f8f4e56, 32).storeUint(queryId, 64).storeAddress(priorityCoin).endCell(),
         });
     }
 

@@ -1,27 +1,104 @@
-import { Blockchain, SandboxContract } from '@ton-community/sandbox';
-import { Cell, toNano } from 'ton-core';
+import { Blockchain, SandboxContract, TreasuryContract } from '@ton/sandbox';
+import { Cell, beginCell, toNano } from '@ton/core';
 import { Fundraiser } from '../wrappers/Fundraiser';
-import '@ton-community/test-utils';
-import { compile } from '@ton-community/blueprint';
+import '@ton/test-utils';
+import { compile } from '@ton/blueprint';
+import { JettonMinter } from '../wrappers/JettonMinter';
 
 describe('Fundraiser', () => {
     let code: Cell;
+    let codeHelper: Cell;
+    let codeJettonMinter: Cell;
+    let codeJettonWallet: Cell;
 
     beforeAll(async () => {
         code = await compile('Fundraiser');
+        codeHelper = await compile('Helper');
+        codeJettonMinter = await compile('JettonMinter');
+        codeJettonWallet = await compile('JettonWallet');
     });
 
     let blockchain: Blockchain;
     let fundraiser: SandboxContract<Fundraiser>;
+    let deployer: SandboxContract<TreasuryContract>;
+    let jetton1Minter: SandboxContract<JettonMinter>;
+    let jetton2Minter: SandboxContract<JettonMinter>;
+    let jetton3Minter: SandboxContract<JettonMinter>;
+    let jetton4Minter: SandboxContract<JettonMinter>;
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
+        blockchain.now = 1000;
 
-        fundraiser = blockchain.openContract(Fundraiser.createFromConfig({}, code));
+        deployer = await blockchain.treasury('deployer');
 
-        const deployer = await blockchain.treasury('deployer');
+        jetton1Minter = blockchain.openContract(
+            JettonMinter.createFromConfig(
+                {
+                    admin: deployer.address,
+                    content: beginCell().storeUint(0, 8).endCell(),
+                    walletCode: codeJettonWallet,
+                },
+                codeJettonMinter
+            )
+        );
 
-        const deployResult = await fundraiser.sendDeploy(deployer.getSender(), toNano('0.05'));
+        jetton2Minter = blockchain.openContract(
+            JettonMinter.createFromConfig(
+                {
+                    admin: deployer.address,
+                    content: beginCell().storeUint(1, 8).endCell(),
+                    walletCode: codeJettonWallet,
+                },
+                codeJettonMinter
+            )
+        );
+
+        jetton3Minter = blockchain.openContract(
+            JettonMinter.createFromConfig(
+                {
+                    admin: deployer.address,
+                    content: beginCell().storeUint(2, 8).endCell(),
+                    walletCode: codeJettonWallet,
+                },
+                codeJettonMinter
+            )
+        );
+
+        jetton4Minter = blockchain.openContract(
+            JettonMinter.createFromConfig(
+                {
+                    admin: deployer.address,
+                    content: beginCell().storeUint(3, 8).endCell(),
+                    walletCode: codeJettonWallet,
+                },
+                codeJettonMinter
+            )
+        );
+
+        await jetton1Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
+        await jetton2Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
+        await jetton3Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
+        await jetton4Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
+
+        fundraiser = blockchain.openContract(
+            Fundraiser.createFromConfig(
+                {
+                    admin: deployer.address,
+                    blockTime: 2000n,
+                    feePercentage: 100,
+                    feeReceiver: deployer.address,
+                    goal: toNano('100'),
+                    helperCode: codeHelper,
+                    metadataIpfsLink: 'https://test.com/123.json',
+                },
+                code
+            )
+        );
+
+        const address = await jetton1Minter.getWalletAddressOf(fundraiser.address);
+
+        const deployResult = await fundraiser.sendDeploy(deployer.getSender(), toNano('0.05'), 123n, address);
 
         expect(deployResult.transactions).toHaveTransaction({
             from: deployer.address,

@@ -33,7 +33,7 @@ global slice context::sender;
 
     context::op = in_msg_body~load_uint(32);
     context::query_id = in_msg_body~load_uint(64);
-    (_, context::sender) = in_msg_full.begin_parse().load_msg_addr();
+    (_, context::sender) = in_msg_full.begin_parse().skip_bits(4).load_msg_addr();
 
     load_data();
 

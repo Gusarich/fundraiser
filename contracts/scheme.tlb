@@ -1,7 +1,8 @@
 _ admin:MsgAddressInt goal:Coins current:(HashmapE 267 Coins) block_time:uint64 priority_coin:MsgAddress
-  metadata_ipfs_link:^Cell fee_receiver:MsgAddressInt fee_percentage:uint16 helper_code:^Cell = FundraiserStorage;
+  metadata_ipfs_link:^Cell fee_receiver:MsgAddressInt fee_percentage:uint16 deployed:Bool helper_code:^Cell = FundraiserStorage;
 _ fundraiser:MsgAddressInt user:MsgAddressInt current:(HashmapE 267 Coins) = HelperStorage;
 
+deploy#2f8f4e56 query_id:uint64 priority_coin:MsgAddress = InternalMsgBody;
 claim#4d0c099d query_id:uint64 = InternalMsgBody;
 confirm_donate#3e96e0d6 query_id:uint64 token:MsgAddressInt amount:Coins = InternalMsgBody;
 return#ee54921 query_id:uint64 = InternalMsgBody;

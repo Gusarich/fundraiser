@@ -2,7 +2,7 @@
     "name": "fundraiser",
     "scripts": {
         "start": "blueprint run",
-        "build": "tsc --build && blueprint build --all",
+        "build": "blueprint build --all && tsc --build",
         "test": "jest"
     },
     "devDependencies": {

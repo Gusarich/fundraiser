@@ -1,3 +1,4 @@
+const int op::deploy = 0x2f8f4e56;
 const int op::claim = 0x4d0c099d;
 const int op::confirm_donate = 0x3e96e0d6;
 const int op::return = 0xee54921;
@@ -11,3 +12,4 @@ const int error::wrong_sender = 701;
 const int error::not_finished = 702;
 const int error::blocked = 703;
 const int error::not_blocked = 704;
+const int error::already_deployed = 705;
