@@ -78,10 +78,11 @@ export class Fundraiser implements Contract {
     }
 
     async getTotal(provider: ContractProvider): Promise<Dictionary<Address, bigint>> {
-        return (await provider.get('get_total', [])).stack
-            .readCell()
-            .beginParse()
-            .loadDictDirect(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(16));
+        const total = (await provider.get('get_total', [])).stack.readCellOpt();
+        if (!total) {
+            return Dictionary.empty(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(4));
+        }
+        return total.beginParse().loadDictDirect(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(4));
     }
 
     async getHelperAddress(provider: ContractProvider, user: Address): Promise<Address> {
