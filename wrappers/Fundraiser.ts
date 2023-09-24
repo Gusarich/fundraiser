@@ -64,4 +64,12 @@ export class Fundraiser implements Contract {
             body: beginCell().storeUint(0x4d0c099d, 32).storeUint(queryId, 64).endCell(),
         });
     }
+
+    async getHelperAddress(provider: ContractProvider, user: Address) {
+        return (
+            await provider.get('get_helper_address', [
+                { type: 'slice', cell: beginCell().storeAddress(user).endCell() },
+            ])
+        ).stack.readAddress();
+    }
 }
