@@ -35,6 +35,7 @@ describe('Fundraiser with time block', () => {
     beforeEach(async () => {
         blockchain = await Blockchain.create();
         blockchain.now = 1000;
+        feeReceiver = randomAddress();
 
         deployer = await blockchain.treasury('deployer');
 
@@ -279,8 +280,15 @@ describe('Fundraiser with time block', () => {
     it('should claim', async () => {
         await commonDonate();
         blockchain.now = 3000;
+        await userWallets[2][0].sendTransfer(
+            users[2].getSender(),
+            toNano('0.1'),
+            toNano('0.05'),
+            fundraiser.address,
+            toNano('90'),
+            beginCell().storeUint(0, 32).endCell()
+        );
         const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
-
         expect(
             result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
         ).toHaveLength(4);
@@ -289,12 +297,12 @@ describe('Fundraiser with time block', () => {
             await blockchain
                 .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address)))
                 .getJettonBalance()
-        ).toEqual(toNano('9.9'));
+        ).toEqual(toNano('99'));
         expect(
             await blockchain
                 .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(feeReceiver)))
                 .getJettonBalance()
-        ).toEqual(toNano('0.1'));
+        ).toEqual(toNano('1'));
 
         expect(
             await blockchain
