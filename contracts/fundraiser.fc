@@ -3,6 +3,7 @@
 
 global slice data::admin;
 global int data::goal;
+global cell data::total;
 global cell data::current;
 global int data::block_time;
 global slice data::priority_coin;
@@ -20,6 +21,7 @@ global slice context::sender;
     slice ds = get_data().begin_parse();
     data::admin = ds~load_msg_addr();
     data::goal = ds~load_coins();
+    data::total = ds~load_dict();
     data::current = ds~load_dict();
     data::block_time = ds~load_uint(64);
     data::priority_coin = ds~load_msg_addr();
@@ -34,6 +36,7 @@ global slice context::sender;
     set_data(begin_cell()
         .store_slice(data::admin)
         .store_coins(data::goal)
+        .store_dict(data::total)
         .store_dict(data::current)
         .store_uint(data::block_time, 64)
         .store_slice(data::priority_coin)
@@ -69,7 +72,7 @@ global slice context::sender;
         throw_unless(error::wrong_sender, equal_slices(context::sender, data::admin));
         throw_unless(error::not_finished, (data::block_time == 0) | (now() > data::block_time));
         if (data::block_time != 0) {
-            (slice priority_balance, int f?) = data::current.dict_get?(267, data::priority_coin);
+            (slice priority_balance, int f?) = data::total.dict_get?(267, data::priority_coin);
             throw_unless(error::blocked, f? & (priority_balance~load_coins() >= data::goal));
         }
         
@@ -108,7 +111,7 @@ global slice context::sender;
 
     elseif (context::op == op::return_request) {
         throw_unless(error::not_finished, (data::block_time == 0) | (now() > data::block_time));
-        (slice priority_balance, int f?) = data::current.dict_get?(267, data::priority_coin);
+        (slice priority_balance, int f?) = data::total.dict_get?(267, data::priority_coin);
         if (data::block_time != 0) {
             throw_if(error::not_blocked, f? & (priority_balance~load_coins() >= data::goal));
         }
@@ -164,8 +167,14 @@ global slice context::sender;
         if (f?) {
             current_amount += current_amount_slice~load_coins();
         }
-        
         data::current~dict_set(267, context::sender, begin_cell().store_coins(current_amount).end_cell().begin_parse());
+
+        (slice total_amount_slice, int f?) = data::total.dict_get?(267, context::sender);
+        int total_amount = amount;
+        if (f?) {
+            total_amount += total_amount_slice~load_coins();
+        }
+        data::total~dict_set(267, context::sender, begin_cell().store_coins(total_amount).end_cell().begin_parse());
 
         cell helper_stateinit = begin_cell()
             .store_uint(0, 2)
@@ -221,7 +230,7 @@ int get_block_time() method_id {
 
 cell get_total() method_id {
     load_data();
-    return data::current;
+    return data::total;
 }
 
 slice get_helper_address(slice user) method_id {

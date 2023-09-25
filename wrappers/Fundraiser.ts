@@ -13,6 +13,7 @@ import {
 export type FundraiserConfig = {
     admin: Address;
     goal: bigint;
+    total?: Dictionary<Address, bigint>;
     current?: Dictionary<Address, bigint>;
     blockTime: bigint;
     priorityCoin?: Address;
@@ -26,6 +27,7 @@ export function fundraiserConfigToCell(config: FundraiserConfig): Cell {
     return beginCell()
         .storeAddress(config.admin)
         .storeCoins(config.goal)
+        .storeDict(config.total)
         .storeDict(config.current)
         .storeUint(config.blockTime, 64)
         .storeAddress(config.priorityCoin)
