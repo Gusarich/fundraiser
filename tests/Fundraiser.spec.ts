@@ -1,11 +1,12 @@
-import { Blockchain, SandboxContract, TreasuryContract } from '@ton/sandbox';
-import { Cell, beginCell, toNano } from '@ton/core';
+import { Blockchain, SandboxContract, TreasuryContract, printTransactionFees } from '@ton/sandbox';
+import { Address, Cell, beginCell, toNano } from '@ton/core';
 import { Fundraiser } from '../wrappers/Fundraiser';
 import '@ton/test-utils';
 import { compile } from '@ton/blueprint';
 import { JettonMinter } from '../wrappers/JettonMinter';
 import { JettonWallet } from '../wrappers/JettonWallet';
 import { Helper } from '../wrappers/Helper';
+import { randomAddress } from '@ton/test-utils';
 
 describe('Fundraiser with time block', () => {
     let code: Cell;
@@ -29,6 +30,7 @@ describe('Fundraiser with time block', () => {
     let jetton4Minter: SandboxContract<JettonMinter>;
     let users: SandboxContract<TreasuryContract>[];
     let userWallets: SandboxContract<JettonWallet>[][];
+    let feeReceiver: Address;
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
@@ -113,7 +115,7 @@ describe('Fundraiser with time block', () => {
                     admin: deployer.address,
                     blockTime: 2000n,
                     feePercentage: 100,
-                    feeReceiver: deployer.address,
+                    feeReceiver,
                     goal: toNano('100'),
                     helperCode: codeHelper,
                     metadataIpfsLink: 'https://test.com/123.json',
@@ -167,11 +169,11 @@ describe('Fundraiser with time block', () => {
 
             const userTotal = await helper.getTotal();
             expect(userTotal.size).toEqual(1);
-            expect(userTotal.values()[0]).toEqual(toNano('10'));
+            expect(userTotal.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
 
             const total = await fundraiser.getTotal();
             expect(total.size).toEqual(1);
-            expect(total.values()[0]).toEqual(toNano('10'));
+            expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
         }
 
         {
@@ -201,13 +203,13 @@ describe('Fundraiser with time block', () => {
 
             const userTotal = await helper.getTotal();
             expect(userTotal.size).toEqual(2);
-            expect(userTotal.values()[0]).toEqual(toNano('10'));
-            expect(userTotal.values()[1]).toEqual(toNano('5'));
+            expect(userTotal.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
+            expect(userTotal.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('5'));
 
             const total = await fundraiser.getTotal();
             expect(total.size).toEqual(2);
-            expect(total.values()[0]).toEqual(toNano('10'));
-            expect(total.values()[1]).toEqual(toNano('5'));
+            expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
+            expect(total.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('5'));
         }
 
         {
@@ -237,12 +239,12 @@ describe('Fundraiser with time block', () => {
 
             const userTotal = await helper.getTotal();
             expect(userTotal.size).toEqual(1);
-            expect(userTotal.values()[0]).toEqual(toNano('15'));
+            expect(userTotal.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('15'));
 
             const total = await fundraiser.getTotal();
             expect(total.size).toEqual(2);
-            expect(total.values()[0]).toEqual(toNano('10'));
-            expect(total.values()[1]).toEqual(toNano('20'));
+            expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
+            expect(total.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('20'));
         }
     });
 });
@@ -269,12 +271,14 @@ describe('Fundraiser without time block', () => {
     let jetton4Minter: SandboxContract<JettonMinter>;
     let users: SandboxContract<TreasuryContract>[];
     let userWallets: SandboxContract<JettonWallet>[][];
+    let feeReceiver: Address;
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
         blockchain.now = 1000;
 
         deployer = await blockchain.treasury('deployer');
+        feeReceiver = randomAddress();
 
         jetton1Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
@@ -353,7 +357,7 @@ describe('Fundraiser without time block', () => {
                     admin: deployer.address,
                     blockTime: 0n,
                     feePercentage: 100,
-                    feeReceiver: deployer.address,
+                    feeReceiver,
                     goal: 0n,
                     helperCode: codeHelper,
                     metadataIpfsLink: 'https://test.com/123.json',
@@ -379,7 +383,7 @@ describe('Fundraiser without time block', () => {
         expect((await fundraiser.getTotal()).size).toEqual(0);
     });
 
-    it('should donate tokens', async () => {
+    async function commonDonate() {
         {
             const result = await userWallets[0][0].sendTransfer(
                 users[0].getSender(),
@@ -407,11 +411,11 @@ describe('Fundraiser without time block', () => {
 
             const userTotal = await helper.getTotal();
             expect(userTotal.size).toEqual(1);
-            expect(userTotal.values()[0]).toEqual(toNano('10'));
+            expect(userTotal.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
 
             const total = await fundraiser.getTotal();
             expect(total.size).toEqual(1);
-            expect(total.values()[0]).toEqual(toNano('10'));
+            expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
         }
 
         {
@@ -441,13 +445,13 @@ describe('Fundraiser without time block', () => {
 
             const userTotal = await helper.getTotal();
             expect(userTotal.size).toEqual(2);
-            expect(userTotal.values()[0]).toEqual(toNano('10'));
-            expect(userTotal.values()[1]).toEqual(toNano('5'));
+            expect(userTotal.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
+            expect(userTotal.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('5'));
 
             const total = await fundraiser.getTotal();
             expect(total.size).toEqual(2);
-            expect(total.values()[0]).toEqual(toNano('10'));
-            expect(total.values()[1]).toEqual(toNano('5'));
+            expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
+            expect(total.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('5'));
         }
 
         {
@@ -477,12 +481,45 @@ describe('Fundraiser without time block', () => {
 
             const userTotal = await helper.getTotal();
             expect(userTotal.size).toEqual(1);
-            expect(userTotal.values()[0]).toEqual(toNano('15'));
+            expect(userTotal.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('15'));
 
             const total = await fundraiser.getTotal();
             expect(total.size).toEqual(2);
-            expect(total.values()[0]).toEqual(toNano('10'));
-            expect(total.values()[1]).toEqual(toNano('20'));
+            expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
+            expect(total.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('20'));
         }
+    }
+
+    it('should donate tokens', commonDonate);
+
+    it('should claim', async () => {
+        await commonDonate();
+        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+
+        expect(
+            result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
+        ).toHaveLength(4);
+
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address)))
+                .getJettonBalance()
+        ).toEqual(toNano('9.9'));
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(feeReceiver)))
+                .getJettonBalance()
+        ).toEqual(toNano('0.1'));
+
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address)))
+                .getJettonBalance()
+        ).toEqual(toNano('19.8'));
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(feeReceiver)))
+                .getJettonBalance()
+        ).toEqual(toNano('0.2'));
     });
 });
