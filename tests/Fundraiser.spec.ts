@@ -124,7 +124,12 @@ describe('Fundraiser with time block', () => {
             )
         );
 
-        const deployResult = await fundraiser.sendDeploy(deployer.getSender(), toNano('0.05'), 123n);
+        const deployResult = await fundraiser.sendDeploy(
+            deployer.getSender(),
+            toNano('0.05'),
+            123n,
+            await jetton1Minter.getWalletAddressOf(fundraiser.address)
+        );
 
         expect(deployResult.transactions).toHaveTransaction({
             from: deployer.address,
@@ -141,7 +146,7 @@ describe('Fundraiser with time block', () => {
         expect((await fundraiser.getTotal()).size).toEqual(0);
     });
 
-    it('should donate tokens', async () => {
+    async function commonDonate() {
         {
             const result = await userWallets[0][0].sendTransfer(
                 users[0].getSender(),
@@ -246,6 +251,61 @@ describe('Fundraiser with time block', () => {
             expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
             expect(total.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('20'));
         }
+    }
+
+    it('should donate tokens', commonDonate);
+
+    it('should not claim until time passes', async () => {
+        await commonDonate();
+        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+
+        expect(result.transactions).toHaveTransaction({
+            on: fundraiser.address,
+            exitCode: 702,
+        });
+    });
+
+    it('should not claim until enough donates', async () => {
+        await commonDonate();
+        blockchain.now = 3000;
+        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+
+        expect(result.transactions).toHaveTransaction({
+            on: fundraiser.address,
+            exitCode: 703,
+        });
+    });
+
+    it('should claim', async () => {
+        await commonDonate();
+        blockchain.now = 3000;
+        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+
+        expect(
+            result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
+        ).toHaveLength(4);
+
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address)))
+                .getJettonBalance()
+        ).toEqual(toNano('9.9'));
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(feeReceiver)))
+                .getJettonBalance()
+        ).toEqual(toNano('0.1'));
+
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address)))
+                .getJettonBalance()
+        ).toEqual(toNano('19.8'));
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(feeReceiver)))
+                .getJettonBalance()
+        ).toEqual(toNano('0.2'));
     });
 });
 
