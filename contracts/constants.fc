@@ -13,3 +13,4 @@ const int error::not_finished = 702;
 const int error::blocked = 703;
 const int error::not_blocked = 704;
 const int error::already_deployed = 705;
+const int error::finished = 706;

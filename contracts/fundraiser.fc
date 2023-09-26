@@ -159,6 +159,8 @@ global slice context::sender;
     }
 
     elseif (context::op == op::transfer_notification) {
+        throw_if(error::finished, (data::block_time != 0) & (now() > data::block_time));
+
         int amount = in_msg_body~load_coins();
         slice sender = in_msg_body~load_msg_addr();
         
