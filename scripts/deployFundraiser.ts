@@ -1,9 +1,17 @@
-import { toNano } from '@ton/core';
-import { Fundraiser } from '../wrappers/Fundraiser';
-import { compile, NetworkProvider } from '@ton/blueprint';
+import { Address, toNano } from '@ton/core';
+import { NetworkProvider } from '@ton/blueprint';
+import { Deployer } from '../wrappers/Deployer';
 
 export async function run(provider: NetworkProvider) {
-    const fundraiser = provider.open(Fundraiser.createFromConfig({}, await compile('Fundraiser')));
-    await fundraiser.sendDeploy(provider.sender(), toNano('0.05'));
-    await provider.waitForDeploy(fundraiser.address);
+    const deployer = provider.open(Deployer.createFromAddress(Address.parse('')));
+
+    await deployer.sendDeployFundraiser(
+        provider.sender(),
+        toNano('0.05'),
+        123n,
+        toNano('100'),
+        1600000000n,
+        'ipfs://qwe',
+        Address.parse('')
+    );
 }
