@@ -1,9 +1,21 @@
-_ admin:MsgAddressInt goal:Coins total:(HashmapE 267 Coins) current:(HashmapE 267 Coins) block_time:uint64 priority_coin:MsgAddress
-  metadata_ipfs_link:^Cell fee_receiver:MsgAddressInt fee_percentage:uint16 deployed:Bool helper_code:^Cell = FundraiserStorage;
+_ admin:MsgAddressInt fee_receiver:MsgAddressInt fee_percentage:uint16 fundraiser_code:^Cell helper_code:^Cell index:uint64 jetton_wallet_code:^Cell = DeployerStorage;
+
+uninit#_ collection:MsgAddressInt index:uint64 = FundraiserStorage;
+init#_ admin:MsgAddressInt goal:Coins total:(HashmapE 267 Coins) current:(HashmapE 267 Coins) block_time:uint64 priority_coin:MsgAddress
+  collection:MsgAddressInt index:uint64 ^[ metadata_ipfs_link:^Cell fee_receiver:MsgAddressInt fee_percentage:uint16 helper_code:^Cell jetton_wallet_code:^Cell ] = FundraiserStorage;
+
 _ fundraiser:MsgAddressInt user:MsgAddressInt current:(HashmapE 267 Coins) = HelperStorage;
 
-deploy#2f8f4e56 query_id:uint64 priority_coin:MsgAddress = InternalMsgBody;
+update_settings#1b7b2d3a query_id:uint64 admin:Maybe MsgAddressInt fee_receiver:Maybe MsgAddressInt fee_percentage:Maybe uint16 fundraiser_code:Maybe ^Cell helper_code:Maybe ^Cell jetton_wallet_code:Maybe ^Cell = InternalMsgBody;
+
+deploy_fundraiser#c6aa753 query_id:uint64 goal:Coins block_time:uint64 priority_coin:MsgAddress metadata_ipfs_link:^Cell = InternalMsgBody;
+
+deploy#2b7a93c0 query_id:uint64 data:^Cell = InternalMsgBody;
+
 claim#4d0c099d query_id:uint64 = InternalMsgBody;
+
 confirm_donate#3e96e0d6 query_id:uint64 token:MsgAddressInt amount:Coins = InternalMsgBody;
+
 return#ee54921 query_id:uint64 = InternalMsgBody;
+
 return_request#69c6ff38 query_id:uint64 user:MsgAddressInt tokens:(HashmapE 267 Coins) = InternalMsgBody;

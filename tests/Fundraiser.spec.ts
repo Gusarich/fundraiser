@@ -7,23 +7,27 @@ import { JettonMinter } from '../wrappers/JettonMinter';
 import { JettonWallet } from '../wrappers/JettonWallet';
 import { Helper } from '../wrappers/Helper';
 import { randomAddress } from '@ton/test-utils';
+import { Deployer } from '../wrappers/Deployer';
 
 describe('Fundraiser with time block', () => {
     let code: Cell;
     let codeHelper: Cell;
+    let codeDeployer: Cell;
     let codeJettonMinter: Cell;
     let codeJettonWallet: Cell;
 
     beforeAll(async () => {
         code = await compile('Fundraiser');
         codeHelper = await compile('Helper');
+        codeDeployer = await compile('Deployer');
         codeJettonMinter = await compile('JettonMinter');
         codeJettonWallet = await compile('JettonWallet');
     });
 
     let blockchain: Blockchain;
     let fundraiser: SandboxContract<Fundraiser>;
-    let deployer: SandboxContract<TreasuryContract>;
+    let deployer: SandboxContract<Deployer>;
+    let deployerWallet: SandboxContract<TreasuryContract>;
     let jetton1Minter: SandboxContract<JettonMinter>;
     let jetton2Minter: SandboxContract<JettonMinter>;
     let jetton3Minter: SandboxContract<JettonMinter>;
@@ -37,12 +41,12 @@ describe('Fundraiser with time block', () => {
         blockchain.now = 1000;
         feeReceiver = randomAddress();
 
-        deployer = await blockchain.treasury('deployer');
+        deployerWallet = await blockchain.treasury('deployerWallet');
 
         jetton1Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(0, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -53,7 +57,7 @@ describe('Fundraiser with time block', () => {
         jetton2Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(1, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -64,7 +68,7 @@ describe('Fundraiser with time block', () => {
         jetton3Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(2, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -75,7 +79,7 @@ describe('Fundraiser with time block', () => {
         jetton4Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(3, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -83,10 +87,10 @@ describe('Fundraiser with time block', () => {
             )
         );
 
-        await jetton1Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
-        await jetton2Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
-        await jetton3Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
-        await jetton4Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
+        await jetton1Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+        await jetton2Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+        await jetton3Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+        await jetton4Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
 
         const jettonMinters = [jetton1Minter, jetton2Minter, jetton3Minter, jetton4Minter];
 
@@ -101,7 +105,7 @@ describe('Fundraiser with time block', () => {
                     )
                 );
                 await jettonMinters[j].sendMint(
-                    deployer.getSender(),
+                    deployerWallet.getSender(),
                     toNano('0.05'),
                     toNano('0.01'),
                     users[i].address,
@@ -110,26 +114,49 @@ describe('Fundraiser with time block', () => {
             }
         }
 
+        deployer = blockchain.openContract(
+            Deployer.createFromConfig(
+                {
+                    admin: deployerWallet.address,
+                    feePercentage: 100,
+                    feeReceiver,
+                    fundraiserCode: code,
+                    helperCode: codeHelper,
+                    index: 0n,
+                    jettonWalletCode: codeJettonWallet,
+                },
+                codeDeployer
+            )
+        );
+
+        {
+            const deployResult = await deployer.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+            expect(deployResult.transactions).toHaveTransaction({
+                from: deployerWallet.address,
+                to: deployer.address,
+                deploy: true,
+                success: true,
+            });
+        }
+
         fundraiser = blockchain.openContract(
             Fundraiser.createFromConfig(
                 {
-                    admin: deployer.address,
-                    blockTime: 2000n,
-                    feePercentage: 100,
-                    feeReceiver,
-                    goal: toNano('100'),
-                    helperCode: codeHelper,
-                    metadataIpfsLink: 'https://test.com/123.json',
+                    collection: deployer.address,
+                    index: 0n,
                 },
                 code
             )
         );
 
-        const deployResult = await fundraiser.sendDeploy(
-            deployer.getSender(),
+        const deployResult = await deployer.sendDeployFundraiser(
+            deployerWallet.getSender(),
             toNano('0.05'),
             123n,
-            await jetton1Minter.getWalletAddressOf(fundraiser.address)
+            toNano('100'),
+            2000n,
+            'https://test.com/123.json',
+            jetton1Minter.address
         );
 
         expect(deployResult.transactions).toHaveTransaction({
@@ -278,7 +305,7 @@ describe('Fundraiser with time block', () => {
 
     it('should not claim until time passes', async () => {
         await commonDonate();
-        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
 
         expect(result.transactions).toHaveTransaction({
             on: fundraiser.address,
@@ -289,8 +316,7 @@ describe('Fundraiser with time block', () => {
     it('should not claim until enough donates', async () => {
         await commonDonate();
         blockchain.now = 3000;
-        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
-
+        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
         expect(result.transactions).toHaveTransaction({
             on: fundraiser.address,
             exitCode: 703,
@@ -308,14 +334,16 @@ describe('Fundraiser with time block', () => {
             beginCell().storeUint(0, 32).endCell()
         );
         blockchain.now = 3000;
-        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
         expect(
             result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
         ).toHaveLength(4);
 
         expect(
             await blockchain
-                .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address)))
+                .openContract(
+                    JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployerWallet.address))
+                )
                 .getJettonBalance()
         ).toEqual(toNano('99'));
         expect(
@@ -326,7 +354,9 @@ describe('Fundraiser with time block', () => {
 
         expect(
             await blockchain
-                .openContract(JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address)))
+                .openContract(
+                    JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployerWallet.address))
+                )
                 .getJettonBalance()
         ).toEqual(toNano('19.8'));
         expect(
@@ -340,19 +370,22 @@ describe('Fundraiser with time block', () => {
 describe('Fundraiser without time block', () => {
     let code: Cell;
     let codeHelper: Cell;
+    let codeDeployer: Cell;
     let codeJettonMinter: Cell;
     let codeJettonWallet: Cell;
 
     beforeAll(async () => {
         code = await compile('Fundraiser');
         codeHelper = await compile('Helper');
+        codeDeployer = await compile('Deployer');
         codeJettonMinter = await compile('JettonMinter');
         codeJettonWallet = await compile('JettonWallet');
     });
 
     let blockchain: Blockchain;
     let fundraiser: SandboxContract<Fundraiser>;
-    let deployer: SandboxContract<TreasuryContract>;
+    let deployer: SandboxContract<Deployer>;
+    let deployerWallet: SandboxContract<TreasuryContract>;
     let jetton1Minter: SandboxContract<JettonMinter>;
     let jetton2Minter: SandboxContract<JettonMinter>;
     let jetton3Minter: SandboxContract<JettonMinter>;
@@ -365,13 +398,13 @@ describe('Fundraiser without time block', () => {
         blockchain = await Blockchain.create();
         blockchain.now = 1000;
 
-        deployer = await blockchain.treasury('deployer');
+        deployerWallet = await blockchain.treasury('deployerWallet');
         feeReceiver = randomAddress();
 
         jetton1Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(0, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -382,7 +415,7 @@ describe('Fundraiser without time block', () => {
         jetton2Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(1, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -393,7 +426,7 @@ describe('Fundraiser without time block', () => {
         jetton3Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(2, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -404,7 +437,7 @@ describe('Fundraiser without time block', () => {
         jetton4Minter = blockchain.openContract(
             JettonMinter.createFromConfig(
                 {
-                    admin: deployer.address,
+                    admin: deployerWallet.address,
                     content: beginCell().storeUint(3, 8).endCell(),
                     walletCode: codeJettonWallet,
                 },
@@ -412,10 +445,10 @@ describe('Fundraiser without time block', () => {
             )
         );
 
-        await jetton1Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
-        await jetton2Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
-        await jetton3Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
-        await jetton4Minter.sendDeploy(deployer.getSender(), toNano('0.05'));
+        await jetton1Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+        await jetton2Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+        await jetton3Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+        await jetton4Minter.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
 
         const jettonMinters = [jetton1Minter, jetton2Minter, jetton3Minter, jetton4Minter];
 
@@ -430,7 +463,7 @@ describe('Fundraiser without time block', () => {
                     )
                 );
                 await jettonMinters[j].sendMint(
-                    deployer.getSender(),
+                    deployerWallet.getSender(),
                     toNano('0.05'),
                     toNano('0.01'),
                     users[i].address,
@@ -439,29 +472,117 @@ describe('Fundraiser without time block', () => {
             }
         }
 
-        fundraiser = blockchain.openContract(
-            Fundraiser.createFromConfig(
+        deployer = blockchain.openContract(
+            Deployer.createFromConfig(
                 {
-                    admin: deployer.address,
-                    blockTime: 0n,
+                    admin: deployerWallet.address,
                     feePercentage: 100,
                     feeReceiver,
-                    goal: 0n,
+                    fundraiserCode: code,
                     helperCode: codeHelper,
-                    metadataIpfsLink: 'https://test.com/123.json',
+                    index: 0n,
+                    jettonWalletCode: codeJettonWallet,
                 },
-                code
+                codeDeployer
             )
         );
 
-        const deployResult = await fundraiser.sendDeploy(deployer.getSender(), toNano('0.05'), 123n);
+        {
+            const deployResult = await deployer.sendDeploy(deployerWallet.getSender(), toNano('0.05'));
+            expect(deployResult.transactions).toHaveTransaction({
+                from: deployerWallet.address,
+                to: deployer.address,
+                deploy: true,
+                success: true,
+            });
+        }
 
-        expect(deployResult.transactions).toHaveTransaction({
-            from: deployer.address,
-            to: fundraiser.address,
-            deploy: true,
-            success: true,
-        });
+        {
+            fundraiser = blockchain.openContract(
+                Fundraiser.createFromConfig(
+                    {
+                        collection: deployer.address,
+                        index: 0n,
+                    },
+                    code
+                )
+            );
+
+            const deployResult = await deployer.sendDeployFundraiser(
+                deployerWallet.getSender(),
+                toNano('0.05'),
+                123n,
+                toNano('100'),
+                2000n,
+                'https://test.com/123.json',
+                jetton1Minter.address
+            );
+
+            expect(deployResult.transactions).toHaveTransaction({
+                from: deployer.address,
+                to: fundraiser.address,
+                deploy: true,
+                success: true,
+            });
+        }
+
+        {
+            fundraiser = blockchain.openContract(
+                Fundraiser.createFromConfig(
+                    {
+                        collection: deployer.address,
+                        index: 1n,
+                    },
+                    code
+                )
+            );
+
+            const deployResult = await deployer.sendDeployFundraiser(
+                deployerWallet.getSender(),
+                toNano('0.05'),
+                123n,
+                toNano('100'),
+                2000n,
+                'https://test.com/123.json',
+                jetton1Minter.address
+            );
+
+            expect(deployResult.transactions).toHaveTransaction({
+                from: deployer.address,
+                to: fundraiser.address,
+                deploy: true,
+                success: true,
+            });
+        }
+
+        {
+            fundraiser = blockchain.openContract(
+                Fundraiser.createFromConfig(
+                    {
+                        collection: deployer.address,
+                        index: 2n,
+                    },
+                    code
+                )
+            );
+
+            const deployResult = await deployer.sendDeployFundraiser(
+                deployerWallet.getSender(),
+                toNano('0.05'),
+                123n,
+                0n,
+                0n,
+                'https://test.com/123.json',
+                jetton1Minter.address
+            );
+
+            expect(deployResult.transactions).toHaveTransaction({
+                from: deployer.address,
+                to: fundraiser.address,
+                deploy: true,
+                success: true,
+            });
+        }
     });
 
     it('should deploy', async () => {
@@ -582,7 +703,7 @@ describe('Fundraiser without time block', () => {
 
     it('should claim', async () => {
         await commonDonate();
-        const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
 
         expect(
             result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -590,7 +711,9 @@ describe('Fundraiser without time block', () => {
 
         expect(
             await blockchain
-                .openContract(JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address)))
+                .openContract(
+                    JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployerWallet.address))
+                )
                 .getJettonBalance()
         ).toEqual(toNano('9.9'));
         expect(
@@ -601,7 +724,9 @@ describe('Fundraiser without time block', () => {
 
         expect(
             await blockchain
-                .openContract(JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address)))
+                .openContract(
+                    JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployerWallet.address))
+                )
                 .getJettonBalance()
         ).toEqual(toNano('19.8'));
         expect(
@@ -614,7 +739,7 @@ describe('Fundraiser without time block', () => {
     it('should claim multiple times', async () => {
         {
             await commonDonate();
-            const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -623,7 +748,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('9.9'));
@@ -636,7 +761,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('19.8'));
@@ -648,7 +773,7 @@ describe('Fundraiser without time block', () => {
         }
 
         {
-            const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -657,7 +782,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('9.9'));
@@ -670,7 +795,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('19.8'));
@@ -691,7 +816,7 @@ describe('Fundraiser without time block', () => {
                 beginCell().storeUint(0, 32).endCell()
             );
 
-            const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -700,7 +825,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('29.7'));
@@ -713,7 +838,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('19.8'));
@@ -742,7 +867,7 @@ describe('Fundraiser without time block', () => {
                 beginCell().storeUint(0, 32).endCell()
             );
 
-            const result = await fundraiser.sendClaim(deployer.getSender(), toNano('0.5'), 123n);
+            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -751,7 +876,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton1Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('39.6'));
@@ -764,7 +889,7 @@ describe('Fundraiser without time block', () => {
             expect(
                 await blockchain
                     .openContract(
-                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployer.address))
+                        JettonWallet.createFromAddress(await jetton2Minter.getWalletAddressOf(deployerWallet.address))
                     )
                     .getJettonBalance()
             ).toEqual(toNano('29.7'));

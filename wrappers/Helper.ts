@@ -33,14 +33,6 @@ export class Helper implements Contract {
         return new Helper(contractAddress(workchain, init), init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
-        await provider.internal(via, {
-            value,
-            sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().endCell(),
-        });
-    }
-
     async sendReturn(provider: ContractProvider, via: Sender, value: bigint, queryId: bigint) {
         await provider.internal(via, {
             value,
