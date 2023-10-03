@@ -268,3 +268,8 @@ slice get_helper_address(slice user) method_id {
         .store_uint(cell_hash(helper_stateinit), 256)
     .end_cell().begin_parse();
 }
+
+(int, int, slice, slice, cell) get_nft_data() method_id {
+    load_data();
+    return (-1, data::index, data::collection, data::admin, data::metadata_ipfs_link);
+}

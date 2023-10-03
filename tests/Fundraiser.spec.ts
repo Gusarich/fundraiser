@@ -124,6 +124,7 @@ describe('Fundraiser with time block', () => {
                     helperCode: codeHelper,
                     index: 0n,
                     jettonWalletCode: codeJettonWallet,
+                    collectionContent: beginCell().endCell(),
                 },
                 codeDeployer
             )
@@ -482,6 +483,7 @@ describe('Fundraiser without time block', () => {
                     helperCode: codeHelper,
                     index: 0n,
                     jettonWalletCode: codeJettonWallet,
+                    collectionContent: Cell.EMPTY,
                 },
                 codeDeployer
             )

@@ -8,6 +8,7 @@ export type DeployerConfig = {
     helperCode: Cell;
     index: bigint;
     jettonWalletCode: Cell;
+    collectionContent: Cell;
 };
 
 export function deployerConfigToCell(config: DeployerConfig): Cell {
@@ -19,6 +20,7 @@ export function deployerConfigToCell(config: DeployerConfig): Cell {
         .storeRef(config.helperCode)
         .storeUint(config.index, 64)
         .storeRef(config.jettonWalletCode)
+        .storeRef(config.collectionContent)
         .endCell();
 }
 

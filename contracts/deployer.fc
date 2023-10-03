@@ -8,6 +8,7 @@ global cell data::fundraiser_code;
 global cell data::helper_code;
 global int data::index;
 global cell data::jetton_wallet_code;
+global cell data::collection_content;
 
 global int context::op;
 global int context::query_id;
@@ -22,6 +23,7 @@ global slice context::sender;
     data::helper_code = ds~load_ref();
     data::index = ds~load_uint(64);
     data::jetton_wallet_code = ds~load_ref();
+    data::collection_content = ds~load_ref();
 }
 
 () save_data() impure {
@@ -33,6 +35,7 @@ global slice context::sender;
         .store_ref(data::helper_code)
         .store_uint(data::index, 64)
         .store_ref(data::jetton_wallet_code)
+        .store_ref(data::collection_content)
     .end_cell());
 }
 
@@ -127,4 +130,35 @@ global slice context::sender;
     }
 
     save_data();
+}
+
+(int, cell, slice) get_collection_data() method_id {
+    load_data();
+    return (data::index, data::collection_content, data::admin);
+}
+
+(slice) get_nft_address_by_index(int index) method_id {
+    load_data();
+
+    cell stateinit = begin_cell()
+        .store_uint(0, 2)
+        .store_dict(data::fundraiser_code)
+        .store_dict(begin_cell()
+            .store_slice(my_address())
+            .store_uint(index, 64)
+        .end_cell())
+        .store_uint(0, 1)
+    .end_cell();
+
+    slice address = begin_cell()
+        .store_uint(4, 3)
+        .store_int(0, 8)
+        .store_uint(cell_hash(stateinit), 256)
+    .end_cell().begin_parse();
+
+    return address;
+}
+
+(cell) get_nft_content(int index, cell individual_content) method_id {
+    return individual_content;
 }
