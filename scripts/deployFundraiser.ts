@@ -1,5 +1,5 @@
-import { Address, toNano } from '@ton/core';
-import { NetworkProvider } from '@ton/blueprint';
+import { Address, toNano } from 'ton-core';
+import { NetworkProvider } from '@ton-community/blueprint';
 import { Deployer } from '../wrappers/Deployer';
 
 export async function run(provider: NetworkProvider) {

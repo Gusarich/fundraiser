@@ -8,7 +8,7 @@ import {
     Dictionary,
     Sender,
     SendMode,
-} from '@ton/core';
+} from 'ton-core';
 
 export type HelperConfig = {
     fundraiser: Address;

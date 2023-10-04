@@ -1,12 +1,12 @@
-import { Blockchain, SandboxContract, TreasuryContract, printTransactionFees } from '@ton/sandbox';
-import { Address, Cell, beginCell, toNano } from '@ton/core';
+import { Blockchain, SandboxContract, TreasuryContract, printTransactionFees } from '@ton-community/sandbox';
+import { Address, Cell, beginCell, toNano } from 'ton-core';
 import { Fundraiser } from '../wrappers/Fundraiser';
-import '@ton/test-utils';
-import { compile } from '@ton/blueprint';
+import '@ton-community/test-utils';
+import { compile } from '@ton-community/blueprint';
 import { JettonMinter } from '../wrappers/JettonMinter';
 import { JettonWallet } from '../wrappers/JettonWallet';
 import { Helper } from '../wrappers/Helper';
-import { randomAddress } from '@ton/test-utils';
+import { randomAddress } from '@ton-community/test-utils';
 import { Deployer } from '../wrappers/Deployer';
 
 describe('Fundraiser with time block', () => {

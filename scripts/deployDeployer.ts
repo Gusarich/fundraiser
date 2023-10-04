@@ -1,6 +1,6 @@
-import { Address, beginCell, toNano } from '@ton/core';
+import { Address, beginCell, toNano } from 'ton-core';
 import { Deployer } from '../wrappers/Deployer';
-import { compile, NetworkProvider } from '@ton/blueprint';
+import { compile, NetworkProvider } from '@ton-community/blueprint';
 
 export async function run(provider: NetworkProvider) {
     const deployer = provider.open(
