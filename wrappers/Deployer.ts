@@ -63,7 +63,7 @@ export class Deployer implements Contract {
                 .storeCoins(goal)
                 .storeUint(blockTime, 64)
                 .storeAddress(priorityCoin)
-                .storeRef(beginCell().storeStringTail(metadataIpfsLink).endCell())
+                .storeRef(beginCell().storeUint(1, 8).storeStringTail(metadataIpfsLink).endCell())
                 .endCell(),
         });
     }
