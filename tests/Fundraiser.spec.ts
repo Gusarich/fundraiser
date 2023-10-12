@@ -173,6 +173,7 @@ describe('Fundraiser with time block', () => {
         expect(await fundraiser.getType()).toEqual(0);
         expect(await fundraiser.getBlockTime()).toEqual(2000);
         expect((await fundraiser.getTotal()).size).toEqual(0);
+        expect(await fundraiser.getPriorityCoin()).toEqualAddress(jetton1Minter.address);
     });
 
     async function commonDonate() {
@@ -592,6 +593,7 @@ describe('Fundraiser without time block', () => {
         expect(await fundraiser.getType()).toEqual(-1);
         expect(await fundraiser.getBlockTime()).toEqual(0);
         expect((await fundraiser.getTotal()).size).toEqual(0);
+        expect(await fundraiser.getPriorityCoin()).toEqualAddress(jetton1Minter.address);
     });
 
     async function commonDonate() {

@@ -273,3 +273,8 @@ slice get_helper_address(slice user) method_id {
     load_data();
     return (-1, data::index, data::collection, data::admin, data::metadata_ipfs_link);
 }
+
+(slice) get_priority_coin() method_id {
+    load_data();
+    return data::priority_coin;
+}
