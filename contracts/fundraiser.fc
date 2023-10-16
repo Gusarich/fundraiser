@@ -278,3 +278,8 @@ slice get_helper_address(slice user) method_id {
     load_data();
     return data::priority_coin;
 }
+
+int get_goal() method_id {
+    load_data();
+    return data::goal;
+}

@@ -60,4 +60,8 @@ export class Fundraiser implements Contract {
     async getPriorityCoin(provider: ContractProvider): Promise<Address> {
         return (await provider.get('get_priority_coin', [])).stack.readAddress();
     }
+
+    async getGoal(provider: ContractProvider): Promise<bigint> {
+        return (await provider.get('get_goal', [])).stack.readBigNumber();
+    }
 }
