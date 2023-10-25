@@ -12,7 +12,7 @@ deploy_fundraiser#c6aa753 query_id:uint64 goal:Coins block_time:uint64 priority_
 
 deploy#2b7a93c0 query_id:uint64 data:^Cell = InternalMsgBody;
 
-claim#4d0c099d query_id:uint64 = InternalMsgBody;
+claim#128146f9 query_id:uint64 tokens:(HashmapE 32 MsgAddressInt) = InternalMsgBody;
 
 confirm_donate#3e96e0d6 query_id:uint64 token:MsgAddressInt amount:Coins = InternalMsgBody;
 

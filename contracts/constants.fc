@@ -1,7 +1,7 @@
 const int op::update_settings = 0x1b7b2d3a;
 const int op::deploy_fundraiser = 0xc6aa753;
 const int op::deploy = 0x2b7a93c0;
-const int op::claim = 0x4d0c099d;
+const int op::claim = 0x128146f9;
 const int op::confirm_donate = 0x3e96e0d6;
 const int op::return = 0xee54921;
 const int op::return_request = 0x69c6ff38;

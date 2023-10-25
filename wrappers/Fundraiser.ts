@@ -22,10 +22,14 @@ export class Fundraiser implements Contract {
         return new Fundraiser(contractAddress(workchain, init), init);
     }
 
-    async sendClaim(provider: ContractProvider, via: Sender, value: bigint, queryId: bigint) {
+    async sendClaim(provider: ContractProvider, via: Sender, value: bigint, queryId: bigint, tokens: Address[]) {
+        let tokensDict = Dictionary.empty(Dictionary.Keys.Uint(32), Dictionary.Values.Address());
+        for (let i = 0; i < tokens.length; i++) {
+            tokensDict.set(i, tokens[i]);
+        }
         await provider.internal(via, {
             value,
-            body: beginCell().storeUint(0x4d0c099d, 32).storeUint(queryId, 64).endCell(),
+            body: beginCell().storeUint(0x128146f9, 32).storeUint(queryId, 64).storeDict(tokensDict).endCell(),
         });
     }
 
@@ -43,6 +47,14 @@ export class Fundraiser implements Contract {
 
     async getTotal(provider: ContractProvider): Promise<Dictionary<Address, bigint>> {
         const total = (await provider.get('get_total', [])).stack.readCellOpt();
+        if (!total) {
+            return Dictionary.empty(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(4));
+        }
+        return total.beginParse().loadDictDirect(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(4));
+    }
+
+    async getCurrent(provider: ContractProvider): Promise<Dictionary<Address, bigint>> {
+        const total = (await provider.get('get_current', [])).stack.readCellOpt();
         if (!total) {
             return Dictionary.empty(Dictionary.Keys.Address(), Dictionary.Values.BigVarUint(4));
         }

@@ -35,6 +35,7 @@ describe('Fundraiser with time block', () => {
     let users: SandboxContract<TreasuryContract>[];
     let userWallets: SandboxContract<JettonWallet>[][];
     let feeReceiver: Address;
+    let fundraiserJettonWallets: Address[] = [];
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
@@ -165,6 +166,10 @@ describe('Fundraiser with time block', () => {
             to: fundraiser.address,
             deploy: true,
             success: true,
+        });
+
+        jettonMinters.forEach(async (minter) => {
+            fundraiserJettonWallets.push(await minter.getWalletAddressOf(fundraiser.address));
         });
     });
 
@@ -337,7 +342,12 @@ describe('Fundraiser with time block', () => {
 
     it('should not claim until time passes', async () => {
         await commonDonate();
-        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+        const result = await fundraiser.sendClaim(
+            deployerWallet.getSender(),
+            toNano('0.5'),
+            123n,
+            fundraiserJettonWallets
+        );
 
         expect(result.transactions).toHaveTransaction({
             on: fundraiser.address,
@@ -348,7 +358,12 @@ describe('Fundraiser with time block', () => {
     it('should not claim until enough donates', async () => {
         await commonDonate();
         blockchain.now = 3000;
-        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+        const result = await fundraiser.sendClaim(
+            deployerWallet.getSender(),
+            toNano('0.5'),
+            123n,
+            fundraiserJettonWallets
+        );
         expect(result.transactions).toHaveTransaction({
             on: fundraiser.address,
             exitCode: 703,
@@ -366,7 +381,12 @@ describe('Fundraiser with time block', () => {
             beginCell().storeUint(0, 32).endCell()
         );
         blockchain.now = 3000;
-        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+        const result = await fundraiser.sendClaim(
+            deployerWallet.getSender(),
+            toNano('0.5'),
+            123n,
+            fundraiserJettonWallets
+        );
         expect(
             result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
         ).toHaveLength(4);
@@ -425,6 +445,7 @@ describe('Fundraiser without time block', () => {
     let users: SandboxContract<TreasuryContract>[];
     let userWallets: SandboxContract<JettonWallet>[][];
     let feeReceiver: Address;
+    let fundraiserJettonWallets: Address[] = [];
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
@@ -615,6 +636,10 @@ describe('Fundraiser without time block', () => {
                 deploy: true,
                 success: true,
             });
+
+            jettonMinters.forEach(async (minter) => {
+                fundraiserJettonWallets.push(await minter.getWalletAddressOf(fundraiser.address));
+            });
         }
     });
 
@@ -738,7 +763,13 @@ describe('Fundraiser without time block', () => {
 
     it('should claim', async () => {
         await commonDonate();
-        const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+        blockchain.now = 3000;
+        const result = await fundraiser.sendClaim(
+            deployerWallet.getSender(),
+            toNano('0.5'),
+            123n,
+            fundraiserJettonWallets
+        );
 
         expect(
             result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -774,7 +805,13 @@ describe('Fundraiser without time block', () => {
     it('should claim multiple times', async () => {
         {
             await commonDonate();
-            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+            blockchain.now = 3000;
+            const result = await fundraiser.sendClaim(
+                deployerWallet.getSender(),
+                toNano('0.5'),
+                123n,
+                fundraiserJettonWallets
+            );
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -808,7 +845,12 @@ describe('Fundraiser without time block', () => {
         }
 
         {
-            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+            const result = await fundraiser.sendClaim(
+                deployerWallet.getSender(),
+                toNano('0.5'),
+                123n,
+                fundraiserJettonWallets
+            );
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -851,7 +893,12 @@ describe('Fundraiser without time block', () => {
                 beginCell().storeUint(0, 32).endCell()
             );
 
-            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+            const result = await fundraiser.sendClaim(
+                deployerWallet.getSender(),
+                toNano('0.5'),
+                123n,
+                fundraiserJettonWallets
+            );
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
@@ -902,7 +949,12 @@ describe('Fundraiser without time block', () => {
                 beginCell().storeUint(0, 32).endCell()
             );
 
-            const result = await fundraiser.sendClaim(deployerWallet.getSender(), toNano('0.5'), 123n);
+            const result = await fundraiser.sendClaim(
+                deployerWallet.getSender(),
+                toNano('0.5'),
+                123n,
+                fundraiserJettonWallets
+            );
 
             expect(
                 result.transactions.filter((t) => t.inMessage?.body.beginParse().loadUint(32) == 0x178d4519)
