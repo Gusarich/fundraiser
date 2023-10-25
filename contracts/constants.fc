@@ -8,7 +8,7 @@ const int op::return_request = 0x69c6ff38;
 const int op::transfer = 0x0f8a7ea5;
 const int op::transfer_notification = 0x7362d09c;
 
-const int const::jetton_transfer_fee = 50000000;
+const int const::jetton_transfer_fee = 100000000;
 
 const int error::wrong_sender = 701;
 const int error::not_finished = 702;
