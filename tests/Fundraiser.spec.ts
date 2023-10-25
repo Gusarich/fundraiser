@@ -286,21 +286,50 @@ describe('Fundraiser with time block', () => {
 
     it('should donate tokens', commonDonate);
 
+    it('should return if goal not reached', async () => {
+        await commonDonate();
+        expect(await userWallets[0][0].getJettonBalance()).toEqual(toNano('990'));
+        blockchain.now = 3000;
+        const result = await userWallets[0][0].sendTransfer(
+            users[0].getSender(),
+            toNano('0.15'),
+            toNano('0.1'),
+            fundraiser.address,
+            toNano('10'),
+            beginCell().storeUint(0, 32).endCell()
+        );
+        expect(await userWallets[0][0].getJettonBalance()).toEqual(toNano('990'));
+
+        const total = await fundraiser.getTotal();
+        expect(total.size).toEqual(2);
+        expect(total.get(await jetton1Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('10'));
+        expect(total.get(await jetton2Minter.getWalletAddressOf(fundraiser.address))).toEqual(toNano('20'));
+
+        {
+            const helper = blockchain.openContract(
+                Helper.createFromAddress(await fundraiser.getHelperAddress(users[0].address))
+            );
+            const result = await helper.sendReturn(users[0].getSender(), toNano('0.5'), 123n);
+            expect(result.transactions).toHaveTransaction({
+                on: fundraiser.address,
+                success: true,
+            });
+            expect(await userWallets[0][0].getJettonBalance()).toEqual(toNano('1000'));
+        }
+    });
+
     it('should not donate tokens after finish', async () => {
         blockchain.now = 3000;
         const result = await userWallets[0][0].sendTransfer(
             users[0].getSender(),
+            toNano('0.15'),
             toNano('0.1'),
-            toNano('0.05'),
             fundraiser.address,
             toNano('15'),
             beginCell().storeUint(0, 32).endCell()
         );
 
-        expect(result.transactions).toHaveTransaction({
-            on: fundraiser.address,
-            exitCode: 706,
-        });
+        expect(await userWallets[0][0].getJettonBalance()).toEqual(toNano('1000'));
 
         const total = await fundraiser.getTotal();
         expect(total.size).toEqual(0);

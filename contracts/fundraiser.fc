@@ -181,53 +181,68 @@ global slice context::sender;
     }
 
     elseif (context::op == op::transfer_notification) {
-        throw_if(error::finished, (data::block_time != 0) & (now() > data::block_time));
-
         int amount = in_msg_body~load_coins();
         slice sender = in_msg_body~load_msg_addr();
-        
-        (slice current_amount_slice, int f?) = data::current.dict_get?(267, context::sender);
-        int current_amount = amount;
-        if (f?) {
-            current_amount += current_amount_slice~load_coins();
-        }
-        data::current~dict_set(267, context::sender, begin_cell().store_coins(current_amount).end_cell().begin_parse());
 
-        (slice total_amount_slice, int f?) = data::total.dict_get?(267, context::sender);
-        int total_amount = amount;
-        if (f?) {
-            total_amount += total_amount_slice~load_coins();
-        }
-        data::total~dict_set(267, context::sender, begin_cell().store_coins(total_amount).end_cell().begin_parse());
+        if ((data::block_time != 0) & (now() > data::block_time)) {
+            send_raw_message(begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice(context::sender)
+                .store_coins(0)
+                .store_uint(1, 107)
+                .store_ref(begin_cell()
+                    .store_uint(op::transfer, 32)
+                    .store_uint(context::query_id, 64)
+                    .store_coins(amount)
+                    .store_slice(sender)
+                    .store_slice(sender)
+                    .store_uint(0, 6)
+                .end_cell())
+            .end_cell(), 64);
+        } else {
+            (slice current_amount_slice, int f?) = data::current.dict_get?(267, context::sender);
+            int current_amount = amount;
+            if (f?) {
+                current_amount += current_amount_slice~load_coins();
+            }
+            data::current~dict_set(267, context::sender, begin_cell().store_coins(current_amount).end_cell().begin_parse());
 
-        cell helper_stateinit = begin_cell()
-            .store_uint(0, 2)
-            .store_dict(data::helper_code)
-            .store_dict(begin_cell()
-                .store_slice(my_address())
-                .store_slice(sender)
+            (slice total_amount_slice, int f?) = data::total.dict_get?(267, context::sender);
+            int total_amount = amount;
+            if (f?) {
+                total_amount += total_amount_slice~load_coins();
+            }
+            data::total~dict_set(267, context::sender, begin_cell().store_coins(total_amount).end_cell().begin_parse());
+
+            cell helper_stateinit = begin_cell()
+                .store_uint(0, 2)
+                .store_dict(data::helper_code)
+                .store_dict(begin_cell()
+                    .store_slice(my_address())
+                    .store_slice(sender)
+                    .store_uint(0, 1)
+                .end_cell())
                 .store_uint(0, 1)
-            .end_cell())
-            .store_uint(0, 1)
-        .end_cell();
+            .end_cell();
 
-        slice helper_address = begin_cell()
-            .store_uint(4, 3)
-            .store_int(0, 8)
-            .store_uint(cell_hash(helper_stateinit), 256)
-        .end_cell().begin_parse();
+            slice helper_address = begin_cell()
+                .store_uint(4, 3)
+                .store_int(0, 8)
+                .store_uint(cell_hash(helper_stateinit), 256)
+            .end_cell().begin_parse();
 
-        send_raw_message(begin_cell()
-            .store_uint(0x18, 6)
-            .store_slice(helper_address)
-            .store_coins(0)
-            .store_uint(6, 108)
-            .store_ref(helper_stateinit)
-            .store_uint(op::confirm_donate, 32)
-            .store_uint(context::query_id, 64)
-            .store_slice(context::sender)
-            .store_coins(amount)
-        .end_cell(), 64);
+            send_raw_message(begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice(helper_address)
+                .store_coins(0)
+                .store_uint(6, 108)
+                .store_ref(helper_stateinit)
+                .store_uint(op::confirm_donate, 32)
+                .store_uint(context::query_id, 64)
+                .store_slice(context::sender)
+                .store_coins(amount)
+            .end_cell(), 64);
+        }
     }
 
     else {
