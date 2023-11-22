@@ -51,6 +51,8 @@ global slice context::sender;
     load_data();
 
     if (context::op == op::update_settings) {
+        throw_unless(error::wrong_sender, equal_slices(data::admin, context::sender));
+
         if (in_msg_body~load_int(1)) {
             data::admin = in_msg_body~load_msg_addr();
         }
@@ -74,7 +76,7 @@ global slice context::sender;
         }
     }
 
-    if (context::op == op::deploy_fundraiser) {
+    elseif (context::op == op::deploy_fundraiser) {
         int goal = in_msg_body~load_coins();
         int block_time = in_msg_body~load_uint(64);
         cell metadata_ipfs_link = in_msg_body~load_ref();
