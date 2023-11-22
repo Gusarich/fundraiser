@@ -323,3 +323,8 @@ int get_goal() method_id {
     load_data();
     return data::goal;
 }
+
+(int, int, int, slice, int) get_info() method_id {
+    load_data();
+    return ((data::block_time == 0) | (now() <= data::block_time), (data::block_time == 0), data::block_time, data::priority_coin, data::goal);
+}
